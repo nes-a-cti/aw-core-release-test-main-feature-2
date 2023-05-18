@@ -20,10 +20,6 @@ public class HelloController {
 
 	@GetMapping("/t")
 	public String index() {		
-		log.info("Test");
-		log.info("Test1");
-		log.info("Test2");
-		log.info("Test3");
 		return "Greetings from Spring Boot with Demo Unified Flow!";
 	}
 
