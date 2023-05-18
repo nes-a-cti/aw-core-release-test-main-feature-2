@@ -21,7 +21,7 @@ public class HelloController {
 	@GetMapping("/t")
 	public String index() {
 		log.info("Test 11");
-		log.info("Test 2");
+		log.info("Test 12");
 		log.info("Test 3");
 		return "Greetings from Spring Boot with Demo Unified Flow!";
 	}
