@@ -1,0 +1,58 @@
+name : PR Open
+
+on :
+  pull_request:
+    types : [opened, synchronize]
+    branches :
+      - 'release/*'
+      # - '!release/testing'
+
+env : 
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+  BASE_BRANCH : ${{ github.event.pull_request.base.ref }}
+  HEAD_BRANCH : ${{github.event.pull_request.head.ref}}
+
+jobs : 
+  build : 
+    runs-on : ubuntu-latest
+    steps : 
+      - name: Check out git repository
+        uses : actions/checkout@v3 
+        with : 
+          ref : '${{env.HEAD_BRANCH}}'
+      
+      - name : Set Enviornment variable
+        id : set_env_variables
+        run : |
+          prev_env=''
+          if ${{contains(env.BASE_BRANCH, 'alpha')}} ; then
+            prev_env='testing'
+          elif ${{contains(env.BASE_BRANCH, 'beta')}} ; then
+            prev_env='alpha'
+          elif ${{contains(env.BASE_BRANCH, 'main')}} ; then
+            prev_env='beta'
+          else
+            echo "Testing environment"
+          fi          
+          echo "Env : $prev_env"
+          echo "PREV_ENV="$prev_env >> "$GITHUB_ENV"                              
+          
+      # Check for the previous environment tags    
+      - name:  Check Previous environment tag  
+        if : ${{ env.PREV_ENV != ''}}
+        id : check_tags      
+        run : |           
+          tag_found=$(git ls-remote --tags origin ${{env.PREV_ENV}}/$(echo ${{env.HEAD_BRANCH}} | cut -d '/' -f 2))
+          if [[ $tag_found != '' ]]; then
+            echo "Tag  Found"
+          else
+            echo "Tag Not Found.."
+            exit 1
+          fi          
+
+      # - name:  Add release tag        
+      #   if : ${{steps.check_tags.outputs.tag_found != ''}}
+      #   run : |          
+      #     echo ${{steps.check_tags.outputs.tag_found}}
+      #     echo "Adding tag"
+

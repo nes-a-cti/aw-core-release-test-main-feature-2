@@ -1,0 +1,23 @@
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+build
+bin/main/com/example/demo/HelloController.class
+.idea/.gitignore
+.idea/.name
+.idea/checkstyle-idea.xml
+.idea/compiler.xml
+.idea/google-java-format.xml
+.idea/gradle.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/sonarlint/issuestore/index.pb
+.idea/sonarlint/issuestore/a/d/ad45ade8a7e9e72ba891d2397babcee8024dfca8
+.vscode/settings.json
+bin/main/com/example/demo/HelloController.class
+.vscode/settings.json
+bin/main/com/example/demo/HelloController.class
+.vscode/settings.json
+bin

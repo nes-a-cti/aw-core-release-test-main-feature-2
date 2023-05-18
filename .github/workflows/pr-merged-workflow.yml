@@ -1,0 +1,107 @@
+name : PR Merged
+
+on :
+  pull_request :
+    types : [closed]
+    branches :
+      - 'release/*'
+      - 'main'
+
+env : 
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+  BASE_BRANCH : ${{ github.event.pull_request.base.ref }}
+  HEAD_BRANCH : ${{github.event.pull_request.head.ref}}
+
+jobs:
+  pr-merged-workflow:
+    runs-on : ubuntu-latest
+    name : deploy-${{ github.event.pull_request.base.ref }}
+    if: github.event.pull_request.merged == true
+    steps:
+
+      #Step 1 : Set environment varialble
+      - name : Set Enviornment variable
+        run : |
+          next_release=''
+          current_env=''
+          if ${{contains(env.BASE_BRANCH, 'testing')}} ; then
+            current_env='testing'
+            next_release='release/alpha'
+          elif ${{contains(env.BASE_BRANCH, 'alpha')}} ; then
+            current_env='alpha'
+            next_release='release/beta'
+          elif ${{contains(env.BASE_BRANCH, 'beta')}} ; then
+            current_env='beta'
+            next_release='main'
+          else
+            current_env='main'
+            echo "Main branch"
+          fi
+          echo $next_release
+          echo $current_env
+          echo "NEXT_RELEASE="$next_release >> "$GITHUB_ENV"
+          echo "CURRENT_ENV="$current_env >> "$GITHUB_ENV"
+
+      #Step 2: Check out branch
+      - name: Check out git repository
+        uses : actions/checkout@v3 
+        with : 
+            ref : '${{env.HEAD_BRANCH}}'
+
+      #Step 3 : Fetch tags      
+      - name: Fetch Tags
+        id: fetch_tags
+        run : |
+          tag_found=$(git ls-remote --tags origin | grep ${{env.CURRENT_ENV}}/$(echo ${{env.HEAD_BRANCH}} | cut -d '/' -f 2)) && echo true || echo false
+          echo "Tag Exists ? : $tag_found"
+          echo "tag_found="$tag_found >> "$GITHUB_OUTPUT"
+
+      #Step 4 :  If currentl release tag not exist, add current release tag
+      - name : Add current release tag
+        # If the tag does not already exist
+        if : ${{steps.fetch_tags.outputs.tag_found == ''}}
+        uses : actions/github-script@v6
+        with : 
+          script : |
+             let { HEAD_BRANCH, CURRENT_ENV } = process.env;
+             let feature = HEAD_BRANCH.replace('feature/', '');             
+             const tag = CURRENT_ENV + '/' + feature;
+             console.log('Tag  : ' + tag);
+             github.rest.git.createRef({owner: context.repo.owner,repo: context.repo.repo,ref: 'refs/tags/' + tag, sha: context.sha})
+
+      # # Step 5: Setting GCP SDK
+      # # https://github.com/google-github-actions/setup-gcloud
+      # - name : Setting GCP Authentication        
+      #   uses : google-github-actions/auth@v0
+      #   with :
+      #     project_id : ${{env.GCP_PROJECT_ID}}
+      #     credentials_json : ${{ secrets.SA_KEY }}
+
+      # # Step 6: Deploy app engine application to beta env
+      # - name : Deploy App Engine application        
+      #   uses : gradle/gradle-build-action@v2
+      #   with :
+      #     gradle-version: 7.1
+      #     arguments : appengineDeploy -PversionIdParam=${{env.CURRENT_ENV}} 
+      
+      # Step 5: Create new pull request if pull request from feature branch to main branch does not exist
+      - name : Create Pull Request If No PR exists   
+        if: github.event.pull_request.merged == true && env.CURRENT_ENV != 'main'
+        run : |
+          openPR=$(gh pr list --head "${{env.HEAD_BRANCH}}" --base "${{env.NEXT_RELEASE}}" -s open)                    
+          if [ -z "$openPR" ] ; then
+            echo "Creating PR."            
+            # gh pr create --title "CI: PR from ${{env.HEAD_BRANCH}} -> ${{env.NEXT_RELEASE}}" --body "CI: PR from ${{env.HEAD_BRANCH}} -> ${{env.NEXT_RELEASE}}" --base "${{env.NEXT_RELEASE}}"            
+            gh pr create --title "${{github.event.pull_request.title}}" --body "${{github.event.pull_request.body}}" --base "${{env.NEXT_RELEASE}}"
+            echo "PR already open.."
+          fi
+        env :
+          GH_TOKEN: ${{ secrets.PULL_TOKEN }}
+      # # Step 7 : Delete existing tags
+      # - name : Delete all the tags of the feature branch
+      #   if: github.event.pull_request.merged == true && env.CURRENT_ENV == 'main'
+      #   run: |
+      #     echo "Deleting the tags"
+      #     git fetch --prune --tags 
+      #     tags=$(git tag --merged ${{env.HEAD_BRANCH}} ; git tag --no-merged ${{env.HEAD_BRANCH}}) 
+      #     git push origin --delete $(echo $tags)

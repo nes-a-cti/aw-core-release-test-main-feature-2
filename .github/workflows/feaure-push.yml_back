@@ -1,0 +1,77 @@
+# name : Feature Push
+
+# on : 
+#   push : 
+#     branches :
+#       - feature/**
+
+# env:
+#     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     CURRENT_BRANCH : ${GITHUB_REF#refs/heads/}
+#     FEATURE_BRANCH : 'feature/feature-3'
+#     RELEASE_BRANCH : 'release/testing'
+#     SECRETS_CONTEXT: ${{ toJson(secrets) }}
+#     GCP_PROJECT_ID : 'aw-test-auth2'
+
+#     CURRENT_RELEASE : 'release/testing'
+#     NEXT_RELEASE : 'release/alpha'
+
+# jobs :
+#   feature-push-job : 
+#     permissions:
+#       id-token: write
+#       contents: read
+#     runs-on : ubuntu-latest
+#     steps:
+#       # Step1 :  Check out feature branch
+#       - uses: actions/checkout@v3 
+#         with : 
+#           ref : '${{env.HEAD_BRANCH}}'
+
+#       # - name: "Assigning Tag Alpha to Feature branch"
+#       #   uses : actions/github-script@v6
+#       #   with : 
+#       #     script : |
+#       #        let { FEATURE_BRANCH, RELEASE_BRANCH } = process.env;
+#       #        FEATURE_BRANCH = FEATURE_BRANCH.replace('feature/', '');
+#       #        RELEASE_BRANCH = RELEASE_BRANCH.replace('release/', '');
+#       #        const tag = FEATURE_BRANCH + '/' + RELEASE_BRANCH;             
+#       #        console.log('Tag : ' + tag);
+#       #        github.rest.git.createRef({owner: context.repo.owner,repo: context.repo.repo,ref: 'refs/tags/' + tag, sha: context.sha})
+#       - name : Set GCP Workload Identity Federation
+#         id  : auth
+#         uses : google-github-actions/auth@v0.8.1
+#         with :
+#           token_format: 'access_token'
+# #          credentials_json : '${{secrets.STAGING_GCP_SA_KEY}}'
+#           workload_identity_provider : 'projects/89737357231/locations/global/workloadIdentityPools/git-hub/providers/git-hub-actions'
+#           service_account : 'ci-cd-workflow@aw-test-auth2.iam.gserviceaccount.com'
+
+#       - name : Print Token
+#         run : echo "${{ steps.auth.outputs.access_token }}"
+
+#       - name : Check credentials
+#         id : file-read
+#         uses : juliangruber/read-file-action@v1
+#         with : 
+#           path : "${{env.GOOGLE_APPLICATION_CREDENTIALS}}"
+
+#       - name : Print credentials
+#         run : echo "${{ steps.package.outputs.content }}"
+          
+
+#       # - name : Create Pull Request If No PR exists                  
+#       #   # Step 2 : Create PR to release beta if not exist
+#       #   run : |
+#       #     echo "${{ secrets.PULL_TOKEN }}"          
+#       #     openPR=$(gh pr list --head "${GITHUB_REF#refs/heads/}" --base 'release/testing' -s open)
+#       #     if [ -z "$openPR" ] ; then
+#       #       echo "Creating PR."
+#       #       gh pr create --title "${{github.event.head_commit.message}}" --body "${{github.event.head_commit.message}}" --base release/testing
+
+#       #     else
+#       #       echo "PR already open."
+#       #     fi      
+#       #   env:
+#       #     GH_TOKEN: ${{ secrets.PULL_TOKEN }}
+          

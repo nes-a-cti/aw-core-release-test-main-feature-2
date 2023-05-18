@@ -1,0 +1,87 @@
+buildscript {      // Configuration for building
+  repositories {
+    jcenter()      // Bintray's repository - a fast Maven Central mirror & more
+    mavenCentral()
+  }
+  dependencies {
+    classpath 'com.google.cloud.tools:appengine-gradle-plugin:2.4.3'
+    classpath 'org.akhikhl.gretty:gretty:+'
+  }
+}
+
+plugins {	
+	id 'org.springframework.boot' version '2.7.2'
+	id 'io.spring.dependency-management' version '1.0.12.RELEASE'
+	id 'java'
+	id 'application'	
+}
+
+apply plugin: 'com.google.cloud.tools.appengine'
+
+group = 'com.example'
+sourceCompatibility = '11'
+
+repositories {
+	gradlePluginPortal()
+	mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/Adaptavant/*")
+        credentials {
+            username = project.findProperty("GITHUB_USERNAME") ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty("GITHUB_TOKEN") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+
+mainClassName = 'com.example.demo.DemoApplication'
+
+dependencies {
+	implementation group: 'com.google.cloud.tools', name: 'appengine-gradle-plugin', version: '2.4.4'
+	implementation('org.springframework.boot:spring-boot-dependencies:2.4.5')
+    implementation('org.springframework.cloud:spring-cloud-dependencies:2020.0.2')
+    implementation('org.springframework.boot:spring-boot-starter-jetty:2.4.5')
+    implementation 'com.google.cloud:google-cloud-logging-logback:0.127.0-alpha'
+    implementation 'co.anywhere:fullauth:2.0.8'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation('org.springframework.boot:spring-boot-starter-web:2.4.5'){
+        exclude group:'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+}
+
+jar {
+    enabled = false
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+def getVersionId() {
+
+    def versionId = ''
+
+    if(project.hasProperty("versionIdParam")){
+        versionId = versionIdParam
+    }else{
+        versionId = 'cd'
+    }
+    println 'VersionId : ' + versionId
+    return versionId
+}
+
+appengine{
+
+    stage{
+        artifact = 'build/libs/demo.jar'
+    }
+
+    deploy{
+        projectId = 'aw-test-auth2'
+        version = getVersionId()
+        stopPreviousVersion = true
+        promote = true
+    }
+}

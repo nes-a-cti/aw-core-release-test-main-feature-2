@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- [START config] -->
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+
+    <service>default</service>
+
+    <runtime>java11</runtime>
+    <threadsafe>true</threadsafe>
+    <sessions-enabled>true</sessions-enabled>
+
+    <!-- Configure log4j -->
+    <system-properties>
+        <property name="java.util.logging.config.file" value="WEB-INF/classes/logging.properties"/>
+    </system-properties>
+
+    <!--<static-files>-->
+    <!--<include path="o/resources/static/**" expiration="10d"/>-->
+    <!--<include path="resources/static/**" expiration="10d"/>-->
+    <!--<include path="resources/dist/**" expiration="2d"/>-->
+    <!--</static-files>-->
+</appengine-web-app>
