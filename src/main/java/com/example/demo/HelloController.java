@@ -19,7 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 public class HelloController {
 
 	@GetMapping("/t")
-	public String index() {		
+	public String index() {
+		log.info("Test 1");
 		return "Greetings from Spring Boot with Demo Unified Flow!";
 	}
 
