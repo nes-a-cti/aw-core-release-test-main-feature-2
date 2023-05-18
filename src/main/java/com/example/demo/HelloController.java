@@ -22,7 +22,7 @@ public class HelloController {
 	public String index() {
 		log.info("Test 11");
 		log.info("Test 12");
-		log.info("Test 3");
+		log.info("Test 13");
 		return "Greetings from Spring Boot with Demo Unified Flow!";
 	}
 
