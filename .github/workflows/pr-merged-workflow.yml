@@ -56,18 +56,7 @@ jobs:
           echo "Tag Exists ? : $tag_found"
           echo "tag_found="$tag_found >> "$GITHUB_OUTPUT"
 
-      #Step 4 :  If currentl release tag not exist, add current release tag
-      - name : Add current release tag
-        # If the tag does not already exist
-        if : ${{steps.fetch_tags.outputs.tag_found == ''}}
-        uses : actions/github-script@v6
-        with : 
-          script : |
-             let { HEAD_BRANCH, CURRENT_ENV } = process.env;
-             let feature = HEAD_BRANCH.replace('feature/', '');             
-             const tag = CURRENT_ENV + '/' + feature;
-             console.log('Tag  : ' + tag);
-             github.rest.git.createRef({owner: context.repo.owner,repo: context.repo.repo,ref: 'refs/tags/' + tag, sha: context.sha})
+      #Step 4 :  If currentl release tag not exist, add current release tag     
 
       # # Step 5: Setting GCP SDK
       # # https://github.com/google-github-actions/setup-gcloud
